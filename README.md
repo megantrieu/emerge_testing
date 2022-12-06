@@ -1,4 +1,4 @@
 # emerge_testing
 
-frontend: emerge
+frontend: emerge\n
 backend: emerge_azure
