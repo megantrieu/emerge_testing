@@ -1,0 +1,60 @@
+﻿@page "/profile"
+@using emerge.Data
+@using emerge.Controller
+
+<MudAppBar Class="pb-2 pt-2" Fixed="false" Elevation="0">
+    <MudText Typo="Typo.h5">Profile</MudText>
+    <MudSpacer />
+</MudAppBar>
+<NavBar />
+<MudMainContent>
+    <MudContainer MaxWidth="MaxWidth.Medium">
+        @if (loggedIn is false)
+        {
+            <MudText Typo="Typo.h5" Class="red-text">Browsing Anonymously</MudText>
+            <MudText Typo="Typo.h6" Class="pt-2">Sign up or log in to receive more personalized news</MudText>
+
+            <MudButton Href="/"
+                           Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           Class="mt-8"
+                           @onclick="Login">Log In</MudButton>
+       
+        }
+
+        @if (loggedIn is not false)
+        {
+            <MudText Typo="Typo.h2" Color="Color.Primary">Hi, @currentUser.Name</MudText>
+            <MudText Typo="Typo.h5" Class="pt-2">Location: <b>@currentUser.Zipcode</b></MudText>
+
+            <MudButton Class="mt-8 mb-8" Href="/depts" Variant="Variant.Outlined" FullWidth="true">View Followed Departments</MudButton>
+            <MudButton Variant="Variant.Outlined"  FullWidth="true" @onclick="SignOut" Href="/">Sign Out</MudButton>
+        }
+    </MudContainer>
+</MudMainContent>
+
+@code {
+    // Hardcoded values
+    public string name { get; set; } = "Jane";
+    public string zip { get; set; } = "98006";
+    public bool loggedIn = true;
+
+    // Current values from controller
+    public UserProfile currentUser = CurrentProfile.currentUser;
+
+
+    void SignOut()
+    {
+        // TODO: Sign out action
+        loggedIn = false;
+        CurrentProfile.loggedIn = false;
+        CurrentProfile.currentUser = new UserProfile();
+    }
+
+    void Login()
+    {
+        // TODO: Login action
+        loggedIn = true;
+    }
+}

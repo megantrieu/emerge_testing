@@ -1,0 +1,63 @@
+﻿@page "/postupdate/{alertid}"
+@using emerge.Data
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using System.Net.Mime
+
+@*<DataAnnotationsValidator />*@
+<MudAppBar Class="pb-2 pt-2" Fixed="false" Elevation="0">
+    <MudIconButton Icon="@Icons.Filled.ArrowBack" Href="/adminprofile" Color="Color.Inherit" Edge="Edge.Start" />
+</MudAppBar>
+<AdminNavBar />
+<MudMainContent>
+    <MudContainer MaxWidth="MaxWidth.Medium">
+        <MudCard>
+            <MudCardContent>
+                <MudTextField Label="UpdateDescription" @bind-Value="UpdateDescription" Variant="Variant.Filled" Class="pt-4 pb-4" />
+                <MudNumericField Label="UpdatePriority" @bind-Value="UpdatePriority" Variant="Variant.Filled" Min="0" Max="5" Class="pt-4 pb-4" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton @onclick="@AddUpdate" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto mr-auto mb-4">Post Update</MudButton>
+            </MudCardActions>
+        </MudCard>
+
+    </MudContainer>
+</MudMainContent>
+
+@code {
+
+    public DateTime UpdateTime { get; set; } = DateTime.Now;
+    public string UpdateDescription { get; set; }
+    public int UpdatePriority { get; set; }
+    private bool _processing = false;
+    [Parameter]
+    public string alertid { get; set; }
+
+
+    private async Task AddUpdate()
+    {
+        _processing = true;
+
+        string updateURI = "https://emerge-azure.azurewebsites.net/api/newsalert/" + alertid + "?";
+
+        HttpClient client = new HttpClient { BaseAddress = new Uri(updateURI) };
+
+
+        HttpResponseMessage response = null;
+
+        var payload = new UpdateInfo()
+        {
+            UpdateTime = UpdateTime,
+            UpdateDescription = UpdateDescription,
+            UpdatePriority = UpdatePriority
+        };
+
+        var payloadString = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), Encoding.UTF8, MediaTypeNames.Application.Json);
+
+        response = await client.PatchAsync(client.BaseAddress, payloadString);
+        // PostAsync(client.BaseAddress, payloadString);
+
+        _processing = false;
+    }
+
+}

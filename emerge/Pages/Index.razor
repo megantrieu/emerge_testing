@@ -1,0 +1,146 @@
+﻿@page  "/"
+@using System;
+@using System.Net;
+@using System.Net.Http;
+@using System.Net.Http.Headers;
+@using System.Threading.Tasks;
+@inject NavigationManager navigation;
+@using emerge.Data;
+@using emerge.Controller;
+@using Newtonsoft.Json;
+@using static MudBlazor.FilterOperator;
+
+
+<MudAppBar Class="pb-2 pt-2" Fixed="false" Elevation="0">
+    <MudText Typo="Typo.h5">Log In</MudText>
+    <MudSpacer />
+</MudAppBar>
+<p>
+    <MudContainer Class="d-flex justify-center align-center"><MudImage Src="images/Emerge.png" Alt="profile pic" /></MudContainer>
+</p>
+
+<MudContainer Class="d-flex justify-center align-center rounded-xl">
+    <MudItem xs="12" sm="6" md="4">
+        <MudStack Spacing=2>
+            <MudTextField @bind-Value="Username" Label="Username" Variant="Variant.Outlined" Elevation="1" Required="true"></MudTextField>
+            <MudTextField @bind-Value="Password" Label="Password" Variant="Variant.Outlined" Elevation="1" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ButtonTestclick" AdornmentAriaLabel="Show Password" Required="true"></MudTextField>
+            <MudContainer Class="d-flex justify-center align-center pt-2">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           @onclick="checkLogin">Log In</MudButton>
+            </MudContainer>
+        </MudStack>
+    </MudItem>
+</MudContainer>
+
+
+<p></p>
+<MudDivider DividerType="DividerType.Middle" Class="my-6" />
+
+<MudText Typo="Typo.subtitle1" Align="Align.Center">Not registered?</MudText>
+
+<MudContainer Class="d-flex justify-center align-center pt-1">
+    <MudButton Href="/createAccount"
+               Variant="Variant.Text"
+               @onclick="createAccount">Create new account</MudButton>
+</MudContainer>
+
+<MudText Typo="Typo.subtitle1" Align="Align.Center">or</MudText>
+
+<MudContainer Class="d-flex justify-center align-center">
+    <MudButton Href="/news"
+               Variant="Variant.Text">Browse Anonymously</MudButton>
+</MudContainer>
+
+@if (showSuccessAlert)
+{
+    <MudAlert Severity="Severity.Success" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(false))">You have successfully logged in.</MudAlert>
+}
+@if (showErrorAlert)
+{
+    <MudAlert Severity="Severity.Error" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(true))">Incorrect username or password. Please try again or create new account.</MudAlert>
+}
+
+@code {
+    // UserProfile fields
+    public string Username { get; set; }
+    public string Password { get; set; }
+    public int ViewType { get; set; }
+
+    // Password visibility
+    bool isShow;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    // Alert bools
+    public bool showSuccessAlert = false;
+    public bool showErrorAlert = false;
+
+    // Password visibility
+    void ButtonTestclick()
+    {
+        @if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    // Function to validate username and password
+    async void checkLogin()
+    {
+        // Initialize HTTP Client
+        HttpClient client = new HttpClient();
+        var end = new Uri("https://emerge-azure.azurewebsites.net/api/profile/" + Username);
+        HttpResponseMessage response = null;
+
+        // Get data response
+        response = await client.GetAsync(end);
+        var responseAsString = response.Content.ReadAsStringAsync().Result;
+        var user = JsonConvert.DeserializeObject<UserProfile>(responseAsString);
+
+        // Check password
+        if (user != null && user.Password.Equals(Password))
+        {
+            // Set current user to logged in user
+            CurrentProfile.currentUser = user;
+            CurrentProfile.loggedIn = true;
+            if (CurrentProfile.currentUser.Admin) navigation.NavigateTo("/adminprofile");
+            else navigation.NavigateTo("/profile");
+            showSuccessAlert = true;
+        }
+        else
+        {
+            // Return to login page and display error message
+            navigation.NavigateTo("/");
+            showErrorAlert = true;
+        }
+    }
+
+    // Alert function to close alerts
+    private void CloseMe(bool value)
+    {
+        if (value)
+        {
+            showErrorAlert = false;
+        }
+        else
+        {
+            showSuccessAlert = false;
+        }
+    }
+
+    //Make sure current account info is cleared for create account functions
+    private void createAccount()
+    {
+        CurrentProfile.currentUser = new UserProfile();
+        CurrentProfile.loggedIn = false;
+    }
+}

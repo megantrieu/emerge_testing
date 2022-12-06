@@ -1,0 +1,30 @@
+﻿@inherits LayoutComponentBase
+
+<div class="page">
+    @if (admin)
+    {
+        //<AdminNavBar />
+    }
+    else
+    {
+        //<NavBar />
+
+    }
+    <MudThemeProvider />
+
+
+    <main>
+        @Body 
+    </main>
+</div>
+
+@code {
+    private Boolean admin = false;
+
+    private void ChangeView()
+    {
+        admin = !admin;
+    }
+}
+
+
